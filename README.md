@@ -1,7 +1,7 @@
 # GambiPaint
 Paint editor for Gamebuino
 
-version beta 1.0
+version beta 1.0.0.1
 
 Simple paint editor for Gamebuino, features:
 

@@ -116,7 +116,7 @@ void setup() {
   // initialize the Gamebuino object
   gb.begin();
   //display the main menu:
-  gb.titleScreen(F("Pooooo?? In my pants?"));
+  gb.titleScreen(F("GambiPaint, for painting, ykno"));
   gb.popup(F("Taim 2 Paent!"), 40);
 
   mem_check();
