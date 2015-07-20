@@ -16,4 +16,5 @@ Simple paint editor for Gamebuino, features:
 *3 different brush sizes
 
 Planned features
+
 *saving to sd card as .bmp
