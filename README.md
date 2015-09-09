@@ -1,6 +1,9 @@
 # GambiPaint
 Paint editor for Gamebuino
 
+version beta 1.0.0.2
+*changed cursor from single pixle to cross hair for easy spotting
+
 version beta 1.0.0.1
 
 Simple paint editor for Gamebuino, features:
@@ -18,3 +21,5 @@ Simple paint editor for Gamebuino, features:
 Planned features
 
 *saving to sd card as .bmp
+
+*changeable cursors
