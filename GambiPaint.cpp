@@ -10,6 +10,7 @@ void loop();
 void drawInvader(byte x, byte y);
 void invertBitMap();
 void clearMenu();
+void cursorMenu();
 void clearBitMap(bool invert);
 void mem_check();
 #line 6
@@ -21,6 +22,8 @@ bool btnRight = false;
 bool btnPaint = false;
 byte posX = 0;
 byte posY = 0;
+byte cursorIcon = 0;
+bool cursorStep = false;
 bool bitMap[24][24];                                 
 bool showInfo = true;
 bool menuLoop = false;
@@ -30,82 +33,84 @@ bool brushSmalls = false;
 #define eepAddr 0
 
           
-const byte pencilButton[] PROGMEM = {16,10,
-B00111111,B11000000,
-B01000000,B00000000,
-B10000100,B01000000,
-B10000111,B11000000,
-B10000100,B01000000,
-B10000010,B10000000,
-B10100001,B00000000,
-B10011110,B00000000,
-B01000000,B00000000,
-B00111111,B11000000,
-};
+const byte pencilButton[] PROGMEM = {16, 10,
+                                     B00111111, B11000000,
+                                     B01000000, B00000000,
+                                     B10000100, B01000000,
+                                     B10000111, B11000000,
+                                     B10000100, B01000000,
+                                     B10000010, B10000000,
+                                     B10100001, B00000000,
+                                     B10011110, B00000000,
+                                     B01000000, B00000000,
+                                     B00111111, B11000000,
+                                    };
 
-const byte eraseButton[] PROGMEM = {16,10,
-B00111111,B11000000,
-B01000000,B00000000,
-B10000011,B11000000,
-B10000100,B01000000,
-B10001000,B10000000,
-B10010001,B00000000,
-B10111110,B00000000,
-B10000000,B00000000,
-B01000000,B00000000,
-B00111111,B11000000,
-};
+const byte eraseButton[] PROGMEM = {16, 10,
+                                    B00111111, B11000000,
+                                    B01000000, B00000000,
+                                    B10000011, B11000000,
+                                    B10000100, B01000000,
+                                    B10001000, B10000000,
+                                    B10010001, B00000000,
+                                    B10111110, B00000000,
+                                    B10000000, B00000000,
+                                    B01000000, B00000000,
+                                    B00111111, B11000000,
+                                   };
 
-const byte radioButton[] PROGMEM = {16,10,
-B11111111,B00000000,
-B00000000,B10000000,
-B00111100,B01000000,
-B01100110,B01000000,
-B01000010,B01000000,
-B01000010,B01000000,
-B01100110,B01000000,
-B00111100,B01000000,
-B00000000,B10000000,
-B11111111,B00000000,
-};
+const byte radioButton[] PROGMEM = {16, 10,
+                                    B11111111, B00000000,
+                                    B00000000, B10000000,
+                                    B00111100, B01000000,
+                                    B01100110, B01000000,
+                                    B01000010, B01000000,
+                                    B01000010, B01000000,
+                                    B01100110, B01000000,
+                                    B00111100, B01000000,
+                                    B00000000, B10000000,
+                                    B11111111, B00000000,
+                                   };
 
-const byte emptyButton[] PROGMEM = {16,10,
-B00111111,B11000000,
-B01000000,B00000000,
-B10000000,B00000000,
-B10000000,B00000000,
-B10000000,B00000000,
-B10000000,B00000000,
-B10000000,B00000000,
-B10000000,B00000000,
-B01000000,B00000000,
-B00111111,B11000000,
-};
+const byte emptyButton[] PROGMEM = {16, 10,
+                                    B00111111, B11000000,
+                                    B01000000, B00000000,
+                                    B10000000, B00000000,
+                                    B10000000, B00000000,
+                                    B10000000, B00000000,
+                                    B10000000, B00000000,
+                                    B10000000, B00000000,
+                                    B10000000, B00000000,
+                                    B01000000, B00000000,
+                                    B00111111, B11000000,
+                                   };
 
-const byte invaderButton[] PROGMEM = {16,10,
-B00111111,B11000000,
-B01010000,B10000000,
-B10001001,B00000000,
-B10011111,B10000000,
-B10110110,B11000000,
-B11011111,B10100000,
-B11011111,B10100000,
-B10010000,B10000000,
-B01001001,B00000000,
-B00111111,B11000000,
-};
+const byte invaderButton[] PROGMEM = {16, 10,
+                                      B00111111, B11000000,
+                                      B01010000, B10000000,
+                                      B10001001, B00000000,
+                                      B10011111, B10000000,
+                                      B10110110, B11000000,
+                                      B11011111, B10100000,
+                                      B11011111, B10100000,
+                                      B10010000, B10000000,
+                                      B01001001, B00000000,
+                                      B00111111, B11000000,
+                                     };
 
                 
-#define MENULENGTH 4
+#define MENULENGTH 5
 const char strLoad[] PROGMEM = "Load from eep";
 const char strSave[] PROGMEM = "Save to eep";
 const char strPaintOps[] PROGMEM = "Canvas operations";
+const char strCursorOps[] PROGMEM = "Cursor operations";
 const char strQuit[] PROGMEM = "Quit GambiPaint";
 const char* const menu[MENULENGTH] PROGMEM = {
   strLoad,
   strSave,
   strPaintOps,
-  strQuit,
+  strCursorOps,
+  strQuit
 };
 
                  
@@ -116,7 +121,24 @@ const char strInvert[] PROGMEM = "Invert painting";
 const char* const paintMenu[PAINTMENULENGTH] PROGMEM = {
   strClear,
   strFill,
-  strInvert,
+  strInvert
+};
+
+                          
+#define CURSORMENULENGTH 6
+const char strStep[] PROGMEM = "Toggle single step";
+const char strCrossh[] PROGMEM = "Cross-hair cursor";
+const char strPoint[] PROGMEM = "Point Cursor";
+const char strChev[] PROGMEM = "Chevron Cursor";
+const char strMouse[] PROGMEM = "Mouse Pointer";
+const char strMouseUpside[] PROGMEM = "Upside Mouse Pointer";
+const char* const cursorChoser[CURSORMENULENGTH] PROGMEM = {
+  strStep,
+  strCrossh,
+  strPoint,
+  strChev,
+  strMouse,
+  strMouseUpside
 };
 
                                                        
@@ -126,8 +148,8 @@ void setup() {
                                     
   gb.begin();
                           
-  gb.titleScreen(F("GambiPaint, for painting, ykno"));
-  gb.popup(F("Taim 2 Paent!"), 40);
+  gb.titleScreen(F("for painting, ykno..."));
+  gb.popup(F("Tym 2 Paent!"), 40);
 
   mem_check();
 }
@@ -144,21 +166,25 @@ void loop() {
     gb.display.drawPixel(83, 47);
 
     if (gb.buttons.pressed(BTN_UP)) {
+      if (cursorStep) posY -= 1;
       btnUp = true;
     } else if (gb.buttons.released(BTN_UP)) {
       btnUp = false;
     }
     if (gb.buttons.pressed(BTN_DOWN)) {
+      if (cursorStep) posY += 1;
       btnDown = true;
     } else if (gb.buttons.released(BTN_DOWN)) {
       btnDown = false;
     }
     if (gb.buttons.pressed(BTN_LEFT)) {
+      if (cursorStep) posX -= 1;
       btnLeft = true;
     } else if (gb.buttons.released(BTN_LEFT)) {
       btnLeft = false;
     }
     if (gb.buttons.pressed(BTN_RIGHT)) {
+      if (cursorStep) posX += 1;
       btnRight = true;
     } else if (gb.buttons.released(BTN_RIGHT)) {
       btnRight = false;
@@ -172,11 +198,13 @@ void loop() {
     if (gb.buttons.pressed(BTN_B)) showInfo = !showInfo;
 
                                
-    if (btnUp)    posY--;
-    if (btnDown)  posY++;
-    if (btnLeft)  posX--;
-    if (btnRight) posX++;
-
+    if (!cursorStep) {
+      if (btnUp)    posY--;
+      if (btnDown)  posY++;
+      if (btnLeft)  posX--;
+      if (btnRight) posX++;
+    }
+    
     if (posX > 83)            posX = 0;
     if (posX == 0 && btnLeft) posX = 83;
     if (posY > 47)            posY = 0;
@@ -184,7 +212,7 @@ void loop() {
 
                           
     if (gb.buttons.pressed(BTN_A)) {
-      if (posX >= 68 && posX <=73) {
+      if (posX >= 68 && posX <= 73) {
         if (posY >= 4 && posY <= 9) {                        
           paintMode = true;
         } else if (posY >= 15 && posY <= 20) {                       
@@ -213,49 +241,49 @@ void loop() {
         }
       }
     }
-    
+
                              
     gb.display.drawRect(29, 0, 26, 26);
-    
+
                               
     for (byte x = 0; x < 24; x++) {
       for (byte y = 0; y < 24; y++) {
-        if (bitMap[x][y]) gb.display.drawPixel(x+30, y+1);
+        if (bitMap[x][y]) gb.display.drawPixel(x + 30, y + 1);
       }
     }
 
     if (posX > 28 && posX < 54) {
       if (posY < 25 && posY > 0) {
         if (btnPaint) {
-          if (!(brushBigs && brushSmalls)) bitMap[posX-30][posY-1] = paintMode                            ;                           
+          if (!(brushBigs && brushSmalls)) bitMap[posX - 30][posY - 1] = paintMode                            ;                            
           if ((!brushBigs && brushSmalls) || (brushBigs && !brushSmalls)) {                  
             if (posY < 24) {
-              bitMap[(posX-30)][(posY-1)+1] = paintMode;
+              bitMap[(posX - 30)][(posY - 1) + 1] = paintMode;
             }
             if (posX < 53) {
-              bitMap[(posX-30+1)][(posY-1)] = paintMode;
+              bitMap[(posX - 30 + 1)][(posY - 1)] = paintMode;
               if (posY < 24) {
-                bitMap[(posX-30)+1][(posY-1)+1] = paintMode;
+                bitMap[(posX - 30) + 1][(posY - 1) + 1] = paintMode;
               }
             }
           }
           if (brushBigs && !brushSmalls) {
             if (posY < 23) {
-              bitMap[(posX-30)][(posY-1)+2] = paintMode;
+              bitMap[(posX - 30)][(posY - 1) + 2] = paintMode;
             }
-            if (posX <52) {
-              bitMap[(posX-30+2)][(posY-1)] = paintMode;
+            if (posX < 52) {
+              bitMap[(posX - 30 + 2)][(posY - 1)] = paintMode;
               if (posY < 23) {
-                bitMap[(posX-30)+2][(posY-1)+2] = paintMode;
-                bitMap[(posX-30)+1][(posY-1)+2] = paintMode;
-                bitMap[(posX-30)+2][(posY-1)+1] = paintMode;
+                bitMap[(posX - 30) + 2][(posY - 1) + 2] = paintMode;
+                bitMap[(posX - 30) + 1][(posY - 1) + 2] = paintMode;
+                bitMap[(posX - 30) + 2][(posY - 1) + 1] = paintMode;
               }
             }
           }
           if (brushBigs && brushSmalls) {
             if (posY < 18 && posY > 0 && posX < 45 && posX > 29) {
                                     
-              drawInvader(posX-30, posY-1);
+              drawInvader(posX - 30, posY - 1);
             }
           }
         }
@@ -272,19 +300,61 @@ void loop() {
       gb.display.println(posY);
       gb.display.print(F("\27Menu\r\n"));
     }
-    gb.display.drawPixel(posX, posY);                                 
 
-    gb.display.drawPixel(posX-2, posY);
-    gb.display.drawPixel(posX-3, posY);
+                                     
+    gb.display.drawPixel(posX, posY);
+    if (cursorIcon == 0) {            
+      gb.display.drawPixel(posX - 2, posY);
+      gb.display.drawPixel(posX - 3, posY);
 
-    gb.display.drawPixel(posX+2, posY);
-    gb.display.drawPixel(posX+3, posY);
+      gb.display.drawPixel(posX + 2, posY);
+      gb.display.drawPixel(posX + 3, posY);
 
-    gb.display.drawPixel(posX, posY-2);
-    gb.display.drawPixel(posX, posY-3);
+      gb.display.drawPixel(posX, posY - 2);
+      gb.display.drawPixel(posX, posY - 3);
 
-    gb.display.drawPixel(posX, posY+2);
-    gb.display.drawPixel(posX, posY+3);
+      gb.display.drawPixel(posX, posY + 2);
+      gb.display.drawPixel(posX, posY + 3);
+    } else if (cursorIcon == 1) {              
+                                                 
+    } else if (cursorIcon == 2) {            
+      gb.display.drawPixel(posX - 2, posY - 2);          
+      gb.display.drawPixel(posX - 3, posY - 2);
+      gb.display.drawPixel(posX - 2, posY - 3);
+
+      gb.display.drawPixel(posX + 2, posY + 2);              
+      gb.display.drawPixel(posX + 3, posY + 2);
+      gb.display.drawPixel(posX + 2, posY + 3);
+
+      gb.display.drawPixel(posX - 2, posY + 2);             
+      gb.display.drawPixel(posX - 3, posY + 2);
+      gb.display.drawPixel(posX - 2, posY + 3);
+
+      gb.display.drawPixel(posX + 2, posY - 2);              
+      gb.display.drawPixel(posX + 3, posY - 2);
+      gb.display.drawPixel(posX + 2, posY - 3);
+    } else if (cursorIcon == 3) {               
+      gb.display.drawFastVLine(posX, posY + 1, 6);
+      gb.display.drawPixel(posX + 1, posY + 1);
+      gb.display.drawPixel(posX + 1, posY + 5);
+      gb.display.drawPixel(posX + 2, posY + 2);
+      gb.display.drawPixel(posX + 2, posY + 5);
+      gb.display.drawPixel(posX + 3, posY + 3);
+      gb.display.drawPixel(posX + 3, posY + 4);
+      gb.display.drawPixel(posX + 3, posY + 6);
+      gb.display.drawPixel(posX + 4, posY + 4);
+    } else if (cursorIcon = 4) {                           
+      gb.display.drawFastVLine(posX, posY - 6, 6);
+      gb.display.drawPixel(posX - 1, posY - 1);
+      gb.display.drawPixel(posX - 1, posY - 5);
+      gb.display.drawPixel(posX - 2, posY - 2);
+      gb.display.drawPixel(posX - 2, posY - 5);
+      gb.display.drawPixel(posX - 3, posY - 3);
+      gb.display.drawPixel(posX - 3, posY - 4);
+      gb.display.drawPixel(posX - 3, posY - 6);
+      gb.display.drawPixel(posX - 4, posY - 4);
+    }
+
 
               
             
@@ -308,7 +378,7 @@ void loop() {
            
     gb.display.drawBitmap(22, 38, invaderButton);
     gb.display.drawBitmap(32, 38, radioButton);
-    
+
     if (paintMode) {
       gb.display.fillRect(70, 6, 2, 2);
     } else {
@@ -323,7 +393,7 @@ void loop() {
     } else if (brushBigs && brushSmalls) {            
       gb.display.fillRect(35, 42, 2, 2);
     }
-    
+
   }
 
   if (gb.buttons.pressed(BTN_C)) {
@@ -331,7 +401,8 @@ void loop() {
       case  0: EEPROM.get(eepAddr, bitMap); break;
       case  1: EEPROM.put(eepAddr, bitMap); break;
       case  2: clearMenu();                 break;
-      case  3: gb.changeGame();             break;
+      case  3: cursorMenu();                break;
+      case  4: gb.changeGame();             break;
       case -1:                              break;
       default:                              break;
     }
@@ -343,49 +414,49 @@ void loop() {
 
 void drawInvader(byte x, byte y) {
            
-  bitMap[x+2][y] = paintMode;
-  bitMap[x+7][y] = paintMode;
+  bitMap[x + 2][y] = paintMode;
+  bitMap[x + 7][y] = paintMode;
            
-  bitMap[x+3][y+1] = paintMode;
-  bitMap[x+6][y+1] = paintMode;
+  bitMap[x + 3][y + 1] = paintMode;
+  bitMap[x + 6][y + 1] = paintMode;
            
-  bitMap[x+2][y+2] = paintMode;
-  bitMap[x+3][y+2] = paintMode;
-  bitMap[x+4][y+2] = paintMode;
-  bitMap[x+5][y+2] = paintMode;
-  bitMap[x+6][y+2] = paintMode;
-  bitMap[x+7][y+2] = paintMode;
+  bitMap[x + 2][y + 2] = paintMode;
+  bitMap[x + 3][y + 2] = paintMode;
+  bitMap[x + 4][y + 2] = paintMode;
+  bitMap[x + 5][y + 2] = paintMode;
+  bitMap[x + 6][y + 2] = paintMode;
+  bitMap[x + 7][y + 2] = paintMode;
            
-  bitMap[x+1][y+3] = paintMode;
-  bitMap[x+2][y+3] = paintMode;
-  bitMap[x+4][y+3] = paintMode;
-  bitMap[x+5][y+3] = paintMode;
-  bitMap[x+7][y+3] = paintMode;
-  bitMap[x+8][y+3] = paintMode;
+  bitMap[x + 1][y + 3] = paintMode;
+  bitMap[x + 2][y + 3] = paintMode;
+  bitMap[x + 4][y + 3] = paintMode;
+  bitMap[x + 5][y + 3] = paintMode;
+  bitMap[x + 7][y + 3] = paintMode;
+  bitMap[x + 8][y + 3] = paintMode;
            
-  bitMap[x][y+4] = paintMode;
-  bitMap[x+2][y+4] = paintMode;
-  bitMap[x+3][y+4] = paintMode;
-  bitMap[x+4][y+4] = paintMode;
-  bitMap[x+5][y+4] = paintMode;
-  bitMap[x+6][y+4] = paintMode;
-  bitMap[x+7][y+4] = paintMode;
-  bitMap[x+9][y+4] = paintMode;
+  bitMap[x][y + 4] = paintMode;
+  bitMap[x + 2][y + 4] = paintMode;
+  bitMap[x + 3][y + 4] = paintMode;
+  bitMap[x + 4][y + 4] = paintMode;
+  bitMap[x + 5][y + 4] = paintMode;
+  bitMap[x + 6][y + 4] = paintMode;
+  bitMap[x + 7][y + 4] = paintMode;
+  bitMap[x + 9][y + 4] = paintMode;
            
-  bitMap[x][y+5] = paintMode;
-  bitMap[x+2][y+5] = paintMode;
-  bitMap[x+3][y+5] = paintMode;
-  bitMap[x+4][y+5] = paintMode;
-  bitMap[x+5][y+5] = paintMode;
-  bitMap[x+6][y+5] = paintMode;
-  bitMap[x+7][y+5] = paintMode;
-  bitMap[x+9][y+5] = paintMode;
+  bitMap[x][y + 5] = paintMode;
+  bitMap[x + 2][y + 5] = paintMode;
+  bitMap[x + 3][y + 5] = paintMode;
+  bitMap[x + 4][y + 5] = paintMode;
+  bitMap[x + 5][y + 5] = paintMode;
+  bitMap[x + 6][y + 5] = paintMode;
+  bitMap[x + 7][y + 5] = paintMode;
+  bitMap[x + 9][y + 5] = paintMode;
            
-  bitMap[x+2][y+6] = paintMode;
-  bitMap[x+7][y+6] = paintMode;
+  bitMap[x + 2][y + 6] = paintMode;
+  bitMap[x + 7][y + 6] = paintMode;
            
-  bitMap[x+3][y+7] = paintMode;
-  bitMap[x+6][y+7] = paintMode;
+  bitMap[x + 3][y + 7] = paintMode;
+  bitMap[x + 6][y + 7] = paintMode;
 }
 
 void invertBitMap() {
@@ -400,14 +471,27 @@ void clearMenu() {
   switch (gb.menu(paintMenu, PAINTMENULENGTH)) {
     case  0: clearBitMap(false);          break;
     case  1: clearBitMap(true);           break;
-    case  2: invertBitMap();               break;
+    case  2: invertBitMap();              break;
+    case -1:                              break;
+    default:                              break;
+  }
+}
+
+void cursorMenu() {
+  switch (gb.menu(cursorChoser, CURSORMENULENGTH)) {
+    case  0: cursorStep = !cursorStep;    break;
+    case  1: cursorIcon = 0;              break;
+    case  2: cursorIcon = 1;              break;
+    case  3: cursorIcon = 2;              break;
+    case  4: cursorIcon = 3;              break;
+    case  5: cursorIcon = 4;              break;
     case -1:                              break;
     default:                              break;
   }
 }
 
 void clearBitMap(bool invert) {
-   for (byte x = 0; x < 24; x++) {                              
+  for (byte x = 0; x < 24; x++) {                              
     for (byte y = 0; y < 24; y++) {
       bitMap[x][y] = invert;
     }
